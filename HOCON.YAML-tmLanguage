@@ -1,0 +1,136 @@
+# [PackageDev] target_format: plist, ext: tmLanguage
+---
+name: HOCON
+scopeName: source.hocon
+fileTypes: [conf]
+uuid: 15e12a0a-a88e-47bd-a967-a8393605cd60
+
+patterns:
+- include: '#value'
+
+repository:
+  number:
+    name: constant.numeric.hocon
+    match: (-?(?:0|[1-9]\d*)(?:(?:\.\d+)?(?:[eE][+-]?\d+)?)?)
+
+  time-unit:
+    match: (\d+)\s*(nanoseconds?|microseconds?|milliseconds?|seconds?|minutes?|hours?|days?|ns|us|ms|s|m|h|d)
+    captures:
+      '1': {name: constant.numeric.time.hocon}
+      '2': {name: keyword.other.time.unit.hocon}
+
+  keyword:
+    patterns:
+    - match: '\+='
+      name: keyword.operator.hocon
+
+    - match: (?:^|\s)(true|false|yes|no|on|off|null)(?=$|\s)
+      captures:
+        '1': {name: keyword.other.boolean.hocon}
+
+    - begin: (?:^|\s)(include (?:url|file|classpath))\s*\(
+      end: '\)'
+      beginCaptures:
+        '1': {name: keyword.other.include.hocon}
+      patterns:
+      - include: '#string'
+
+    - match: (?:^|\s)(include)\s
+      captures:
+        '1': {name: keyword.other.include.hocon}
+      patterns:
+      - include: '#string'
+
+  hash-comment:
+    match: (#.*$\n?)
+    captures:
+      '0': {name: comment.line.number-sign.hocon}
+
+  slashes-comment:
+    match: (//.*$\n?)
+    captures:
+      '0': {name: punctuation.definition.comment.hocon}
+
+  multiline-string:
+    name: string.quoted.triple.hocon
+    begin: '"""'
+    end: '"""'
+    captures:
+      '0': {name: punctuation.definition.string.hocon}
+    patterns:
+    - name: constant.character.escape.hocon
+      match: (\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))
+    
+    - name: invalid.illegal.unrecognized-string-escape.hocon
+      match: \\.
+
+  string:
+    name: string.quoted.double.hocon
+    begin: '"'
+    end: '"'
+    captures:
+      '0': {name: punctuation.definition.string.hocon}
+    patterns:
+    - name: constant.character.escape.hocon
+      match: (\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))
+
+    - name: invalid.illegal.unrecognized-string-escape.hocon
+      match: \\.
+
+  name:
+    name: entity.name.function.hocon
+    match: ([a-zA-Z_][a-zA-Z0-9_$\.-]*)
+
+  substitution:
+    name: variable.parameter.substitution.hocon
+    begin: (\$\{\??)
+    end: (\})
+    captures:
+      '0': {name: variable.parameter.substitution.hocon}
+    patterns:
+    - name: variable.parameter.substitution.hocon
+      match: ([a-zA-Z_][a-zA-Z0-9_$\.-]*)
+
+  list:
+    name: meta.structure.array.hocon
+    begin: '\['
+    end: '\]'
+    captures:
+      '0': {name: punctuation.definition.list.hocon}
+    patterns:
+    - include: '#value'
+
+    - name: punctuation.separator.array.hocon
+      match: ','
+
+    - name: invalid.illegal.expected-list-separator.hocon
+      match: ([^\s\]])
+
+  object:
+    begin: '\{'
+    end: '\}'
+    captures:
+      '0': {name: punctuation.definition.section.hocon}
+    patterns:
+    - include: '#name'
+      name: entity.name.function.hocon
+
+    - name: punctuation.separator.key-value.hocon
+      match: ((?:=|:)|\s*(?=\{))
+
+    - include: '#value'
+
+  value:
+    patterns:
+    - include: '#hash-comment'
+    - include: '#slashes-comment'
+    - include: '#time-unit'
+    - include: '#number'
+    - include: '#keyword'
+    - include: '#substitution'
+    - include: '#string'
+    - include: '#multiline-string'
+    - include: '#list'
+    - include: '#object'
+
+...
